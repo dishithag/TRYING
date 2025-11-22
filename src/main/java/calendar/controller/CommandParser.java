@@ -38,29 +38,29 @@ public class CommandParser {
    * Immutable value for a parsed command. Legacy string fields remain for compatibility.
    */
   public static class Command {
-    public final String type;
-    public final String subject;
-    public final LocalDateTime startDateTime;
-    public final LocalDateTime endDateTime;
-    public final Set<DayOfWeek> weekdays;
-    public final Integer occurrences;
-    public final LocalDate untilDate;
-    public final String property;
-    public final String newValue;
-    public final String editScope;
-    public final String fileName;
-    public final String calendarName;
-    public final String timezoneId;
-    public final String targetCalendar;
-    public final LocalDateTime targetDateTime;
-    public final LocalDate day;
-    public final LocalDate rangeStart;
-    public final LocalDate rangeEnd;
+    private final String type;
+    private final String subject;
+    private final LocalDateTime startDateTime;
+    private final LocalDateTime endDateTime;
+    private final Set<DayOfWeek> weekdays;
+    private final Integer occurrences;
+    private final LocalDate untilDate;
+    private final String property;
+    private final String newValue;
+    private final String editScope;
+    private final String fileName;
+    private final String calendarName;
+    private final String timezoneId;
+    private final String targetCalendar;
+    private final LocalDateTime targetDateTime;
+    private final LocalDate day;
+    private final LocalDate rangeStart;
+    private final LocalDate rangeEnd;
 
-    public final CommandType typeEnum;
-    public final EditScope editScopeEnum;
-    public final EventProperty eventPropertyEnum;
-    public final CalendarProperty calendarPropertyEnum;
+    private final CommandType typeEnum;
+    private final EditScope editScopeEnum;
+    private final EventProperty eventPropertyEnum;
+    private final CalendarProperty calendarPropertyEnum;
 
     /**
      * Constructs a parsed command value used by controllers.
@@ -129,6 +129,94 @@ public class CommandParser {
       this.editScopeEnum = editScopeEnum;
       this.eventPropertyEnum = eventPropertyEnum;
       this.calendarPropertyEnum = calendarPropertyEnum;
+    }
+
+    public String getType() {
+      return type;
+    }
+
+    public String getSubject() {
+      return subject;
+    }
+
+    public LocalDateTime getStartDateTime() {
+      return startDateTime;
+    }
+
+    public LocalDateTime getEndDateTime() {
+      return endDateTime;
+    }
+
+    public Set<DayOfWeek> getWeekdays() {
+      return weekdays;
+    }
+
+    public Integer getOccurrences() {
+      return occurrences;
+    }
+
+    public LocalDate getUntilDate() {
+      return untilDate;
+    }
+
+    public String getProperty() {
+      return property;
+    }
+
+    public String getNewValue() {
+      return newValue;
+    }
+
+    public String getEditScope() {
+      return editScope;
+    }
+
+    public String getFileName() {
+      return fileName;
+    }
+
+    public String getCalendarName() {
+      return calendarName;
+    }
+
+    public String getTimezoneId() {
+      return timezoneId;
+    }
+
+    public String getTargetCalendar() {
+      return targetCalendar;
+    }
+
+    public LocalDateTime getTargetDateTime() {
+      return targetDateTime;
+    }
+
+    public LocalDate getDay() {
+      return day;
+    }
+
+    public LocalDate getRangeStart() {
+      return rangeStart;
+    }
+
+    public LocalDate getRangeEnd() {
+      return rangeEnd;
+    }
+
+    public CommandType getTypeEnum() {
+      return typeEnum;
+    }
+
+    public EditScope getEditScopeEnum() {
+      return editScopeEnum;
+    }
+
+    public EventProperty getEventPropertyEnum() {
+      return eventPropertyEnum;
+    }
+
+    public CalendarProperty getCalendarPropertyEnum() {
+      return calendarPropertyEnum;
     }
   }
 
