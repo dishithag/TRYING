@@ -62,73 +62,171 @@ public class CommandParser {
     private final EventProperty eventPropertyEnum;
     private final CalendarProperty calendarPropertyEnum;
 
-    /**
-     * Constructs a parsed command value used by controllers.
-     *
-     * <p>One constructor serves all command kinds; fields not relevant to the
-     * detected command are {@code null}. When both a raw token and an enum are
-     * provided, the enum is the normalized value.</p>
-     *
-     * @param type                 raw command type token (e.g., "create_calendar", "edit")
-     * @param subject              event subject, when applicable
-     * @param start                start date-time (ISO local), when applicable
-     * @param end                  end date-time (ISO local), when applicable
-     * @param weekdays             repeating days for series (MTWRFSU), when applicable
-     * @param occurrences          repeat count for {@code for N times}, or {@code null}
-     * @param untilDate            inclusive series end date for {@code until}, or {@code null}
-     * @param property             raw edit property token (e.g., "start","location"),
-     *                             or {@code null}
-     * @param newValue             raw new value for edits (quoted text or ISO datetime),
-     *                             or {@code null}
-     * @param editScope            raw edit scope token: "event" | "events" | "series",
-     *                             or {@code null}
-     * @param fileName             export file name for {@code export cal}, or {@code null}
-     * @param calendarName         calendar name for create/edit/use, or {@code null}
-     * @param timezoneId           IANA time zone id for create/edit, or {@code null}
-     * @param targetCalendar       destination calendar for copy commands, or {@code null}
-     * @param targetDateTime       target instant (or target day at 00:00) for copy, or {@code null}
-     * @param day                  source day for {@code copy events on}, or {@code null}
-     * @param rangeStart           start day for {@code copy events between}, or {@code null}
-     * @param rangeEnd             end day for {@code copy events between}, or {@code null}
-     * @param typeEnum             normalized command type enum (preferred over
-     *                             {@code type}) or {@code null}
-     * @param editScopeEnum        normalized edit scope enum (preferred over
-     *                             {@code editScope}) or {@code null}
-     * @param eventPropertyEnum    normalized event property for edits, or {@code null}
-     * @param calendarPropertyEnum normalized calendar property for calendar edits, or {@code null}
-     */
+    private Command(Builder builder) {
+      this.type = builder.type;
+      this.subject = builder.subject;
+      this.startDateTime = builder.startDateTime;
+      this.endDateTime = builder.endDateTime;
+      this.weekdays = builder.weekdays;
+      this.occurrences = builder.occurrences;
+      this.untilDate = builder.untilDate;
+      this.property = builder.property;
+      this.newValue = builder.newValue;
+      this.editScope = builder.editScope;
+      this.fileName = builder.fileName;
+      this.calendarName = builder.calendarName;
+      this.timezoneId = builder.timezoneId;
+      this.targetCalendar = builder.targetCalendar;
+      this.targetDateTime = builder.targetDateTime;
+      this.day = builder.day;
+      this.rangeStart = builder.rangeStart;
+      this.rangeEnd = builder.rangeEnd;
+      this.typeEnum = builder.typeEnum;
+      this.editScopeEnum = builder.editScopeEnum;
+      this.eventPropertyEnum = builder.eventPropertyEnum;
+      this.calendarPropertyEnum = builder.calendarPropertyEnum;
+    }
 
-    public Command(String type, String subject, LocalDateTime start,
-                   LocalDateTime end, Set<DayOfWeek> weekdays,
-                   Integer occurrences, LocalDate untilDate,
-                   String property, String newValue, String editScope,
-                   String fileName, String calendarName, String timezoneId,
-                   String targetCalendar, LocalDateTime targetDateTime,
-                   LocalDate day, LocalDate rangeStart, LocalDate rangeEnd,
-                   CommandType typeEnum, EditScope editScopeEnum,
-                   EventProperty eventPropertyEnum, CalendarProperty calendarPropertyEnum) {
-      this.type = type;
-      this.subject = subject;
-      this.startDateTime = start;
-      this.endDateTime = end;
-      this.weekdays = weekdays;
-      this.occurrences = occurrences;
-      this.untilDate = untilDate;
-      this.property = property;
-      this.newValue = newValue;
-      this.editScope = editScope;
-      this.fileName = fileName;
-      this.calendarName = calendarName;
-      this.timezoneId = timezoneId;
-      this.targetCalendar = targetCalendar;
-      this.targetDateTime = targetDateTime;
-      this.day = day;
-      this.rangeStart = rangeStart;
-      this.rangeEnd = rangeEnd;
-      this.typeEnum = typeEnum;
-      this.editScopeEnum = editScopeEnum;
-      this.eventPropertyEnum = eventPropertyEnum;
-      this.calendarPropertyEnum = calendarPropertyEnum;
+    public static Builder builder(String type, CommandType typeEnum) {
+      return new Builder(type, typeEnum);
+    }
+
+    public static Builder builder(String type) {
+      return new Builder(type, null);
+    }
+
+    public static class Builder {
+      private final String type;
+      private final CommandType typeEnum;
+      private String subject;
+      private LocalDateTime startDateTime;
+      private LocalDateTime endDateTime;
+      private Set<DayOfWeek> weekdays;
+      private Integer occurrences;
+      private LocalDate untilDate;
+      private String property;
+      private String newValue;
+      private String editScope;
+      private String fileName;
+      private String calendarName;
+      private String timezoneId;
+      private String targetCalendar;
+      private LocalDateTime targetDateTime;
+      private LocalDate day;
+      private LocalDate rangeStart;
+      private LocalDate rangeEnd;
+      private EditScope editScopeEnum;
+      private EventProperty eventPropertyEnum;
+      private CalendarProperty calendarPropertyEnum;
+
+      private Builder(String type, CommandType typeEnum) {
+        this.type = type;
+        this.typeEnum = typeEnum;
+      }
+
+      public Builder subject(String subject) {
+        this.subject = subject;
+        return this;
+      }
+
+      public Builder startDateTime(LocalDateTime startDateTime) {
+        this.startDateTime = startDateTime;
+        return this;
+      }
+
+      public Builder endDateTime(LocalDateTime endDateTime) {
+        this.endDateTime = endDateTime;
+        return this;
+      }
+
+      public Builder weekdays(Set<DayOfWeek> weekdays) {
+        this.weekdays = weekdays;
+        return this;
+      }
+
+      public Builder occurrences(Integer occurrences) {
+        this.occurrences = occurrences;
+        return this;
+      }
+
+      public Builder untilDate(LocalDate untilDate) {
+        this.untilDate = untilDate;
+        return this;
+      }
+
+      public Builder property(String property) {
+        this.property = property;
+        return this;
+      }
+
+      public Builder newValue(String newValue) {
+        this.newValue = newValue;
+        return this;
+      }
+
+      public Builder editScope(String editScope) {
+        this.editScope = editScope;
+        return this;
+      }
+
+      public Builder fileName(String fileName) {
+        this.fileName = fileName;
+        return this;
+      }
+
+      public Builder calendarName(String calendarName) {
+        this.calendarName = calendarName;
+        return this;
+      }
+
+      public Builder timezoneId(String timezoneId) {
+        this.timezoneId = timezoneId;
+        return this;
+      }
+
+      public Builder targetCalendar(String targetCalendar) {
+        this.targetCalendar = targetCalendar;
+        return this;
+      }
+
+      public Builder targetDateTime(LocalDateTime targetDateTime) {
+        this.targetDateTime = targetDateTime;
+        return this;
+      }
+
+      public Builder day(LocalDate day) {
+        this.day = day;
+        return this;
+      }
+
+      public Builder rangeStart(LocalDate rangeStart) {
+        this.rangeStart = rangeStart;
+        return this;
+      }
+
+      public Builder rangeEnd(LocalDate rangeEnd) {
+        this.rangeEnd = rangeEnd;
+        return this;
+      }
+
+      public Builder editScopeEnum(EditScope editScopeEnum) {
+        this.editScopeEnum = editScopeEnum;
+        return this;
+      }
+
+      public Builder eventPropertyEnum(EventProperty eventPropertyEnum) {
+        this.eventPropertyEnum = eventPropertyEnum;
+        return this;
+      }
+
+      public Builder calendarPropertyEnum(CalendarProperty calendarPropertyEnum) {
+        this.calendarPropertyEnum = calendarPropertyEnum;
+        return this;
+      }
+
+      public Command build() {
+        return new Command(this);
+      }
     }
 
     public String getType() {
@@ -258,52 +356,26 @@ public class CommandParser {
     String trimmed = line.trim();
     String lower = trimmed.toLowerCase();
 
-    if (lower.equals("exit")) {
-      return new Command("exit", null, null, null, null, null, null,
-          null, null, null, null, null, null, null, null, null, null, null,
-          CommandType.EXIT, null, null, null);
+    Command simple = parseSimpleCommands(trimmed, lower);
+    if (simple != null) {
+      return simple;
     }
-    if (lower.startsWith("create calendar ")) {
-      return parseCreateCalendar(trimmed);
+
+    Command calendarCommand = parseCalendarCommands(trimmed, lower);
+    if (calendarCommand != null) {
+      return calendarCommand;
     }
-    if (lower.startsWith("edit calendar ")) {
-      return parseEditCalendar(trimmed);
+
+    Command printCommand = parsePrintCommands(trimmed, lower);
+    if (printCommand != null) {
+      return printCommand;
     }
-    if (lower.startsWith("use calendar ")) {
-      return parseUseCalendar(trimmed);
+
+    Command copyCommand = parseCopyCommands(trimmed, lower);
+    if (copyCommand != null) {
+      return copyCommand;
     }
-    if (lower.startsWith("export cal ")) {
-      String fileName = trimmed.substring("export cal ".length()).trim();
-      return new Command("export", null, null, null, null, null, null,
-          null, null, null, fileName, null, null, null, null, null, null, null,
-          CommandType.EXPORT, null, null, null);
-    }
-    if (lower.startsWith("show status on ")) {
-      String dateTimeStr = trimmed.substring("show status on ".length()).trim();
-      LocalDateTime dateTime = parseDateTime(dateTimeStr);
-      return new Command("status", null, dateTime, null, null, null, null,
-          null, null, null, null, null, null, null, null, null, null, null,
-          CommandType.STATUS, null, null, null);
-    }
-    if (lower.startsWith("print events on ")) {
-      String dateStr = trimmed.substring("print events on ".length()).trim();
-      LocalDate date = parseDate(dateStr);
-      return new Command("print_on", null, date.atStartOfDay(), null, null, null, null,
-          null, null, null, null, null, null, null, null, null, null, null,
-          CommandType.PRINT_ON, null, null, null);
-    }
-    if (lower.startsWith("print events from ")) {
-      return parsePrintRange(trimmed);
-    }
-    if (lower.startsWith("copy event ")) {
-      return parseCopyEvent(trimmed);
-    }
-    if (lower.startsWith("copy events on ")) {
-      return parseCopyOnDate(trimmed);
-    }
-    if (lower.startsWith("copy events between ")) {
-      return parseCopyBetween(trimmed);
-    }
+
     if (lower.startsWith("create event ")) {
       return parseCreateEvent(trimmed.substring("create event ".length()));
     }
@@ -315,6 +387,66 @@ public class CommandParser {
     throw new IllegalArgumentException("Unknown command: " + trimmed);
   }
 
+  private Command parseSimpleCommands(String trimmed, String lower) {
+    if (lower.equals("exit")) {
+      return Command.builder("exit", CommandType.EXIT).build();
+    }
+    if (lower.startsWith("export cal ")) {
+      String fileName = trimmed.substring("export cal ".length()).trim();
+      return Command.builder("export", CommandType.EXPORT)
+          .fileName(fileName)
+          .build();
+    }
+    if (lower.startsWith("show status on ")) {
+      String dateTimeStr = trimmed.substring("show status on ".length()).trim();
+      LocalDateTime dateTime = parseDateTime(dateTimeStr);
+      return Command.builder("status", CommandType.STATUS)
+          .startDateTime(dateTime)
+          .build();
+    }
+    return null;
+  }
+
+  private Command parseCalendarCommands(String trimmed, String lower) {
+    if (lower.startsWith("create calendar ")) {
+      return parseCreateCalendar(trimmed);
+    }
+    if (lower.startsWith("edit calendar ")) {
+      return parseEditCalendar(trimmed);
+    }
+    if (lower.startsWith("use calendar ")) {
+      return parseUseCalendar(trimmed);
+    }
+    return null;
+  }
+
+  private Command parsePrintCommands(String trimmed, String lower) {
+    if (lower.startsWith("print events on ")) {
+      String dateStr = trimmed.substring("print events on ".length()).trim();
+      LocalDate date = parseDate(dateStr);
+      return Command.builder("print_on", CommandType.PRINT_ON)
+          .startDateTime(date.atStartOfDay())
+          .build();
+    }
+    if (lower.startsWith("print events from ")) {
+      return parsePrintRange(trimmed);
+    }
+    return null;
+  }
+
+  private Command parseCopyCommands(String trimmed, String lower) {
+    if (lower.startsWith("copy event ")) {
+      return parseCopyEvent(trimmed);
+    }
+    if (lower.startsWith("copy events on ")) {
+      return parseCopyOnDate(trimmed);
+    }
+    if (lower.startsWith("copy events between ")) {
+      return parseCopyBetween(trimmed);
+    }
+    return null;
+  }
+
   private Command parseCreateCalendar(String line) {
     Matcher nameM = FLAG_NAME.matcher(line);
     Matcher tzM = FLAG_TZ.matcher(line);
@@ -324,9 +456,10 @@ public class CommandParser {
     }
     String name = unquote(nameM.group(1));
     String tz = tzM.group(1);
-    return new Command("create_calendar", null, null, null, null, null, null,
-        null, null, null, null, name, tz, null, null, null, null, null,
-        CommandType.CREATE_CALENDAR, null, null, null);
+    return Command.builder("create_calendar", CommandType.CREATE_CALENDAR)
+        .calendarName(name)
+        .timezoneId(tz)
+        .build();
   }
 
   private Command parseEditCalendar(String line) {
@@ -351,9 +484,12 @@ public class CommandParser {
         throw new IllegalArgumentException("Unknown calendar property: " + prop);
       }
     }
-    return new Command("edit_calendar", null, null, null, null, null, null,
-        prop, val, null, null, name, null, null, null, null, null, null,
-        CommandType.EDIT_CALENDAR, null, null, cp);
+    return Command.builder("edit_calendar", CommandType.EDIT_CALENDAR)
+        .property(prop)
+        .newValue(val)
+        .calendarName(name)
+        .calendarPropertyEnum(cp)
+        .build();
   }
 
   private Command parseUseCalendar(String line) {
@@ -363,9 +499,9 @@ public class CommandParser {
           "Invalid syntax. Expected: use calendar --name <name>");
     }
     String name = unquote(nameM.group(1));
-    return new Command("use_calendar", null, null, null, null, null, null,
-        null, null, null, null, name, null, null, null, null, null, null,
-        CommandType.USE_CALENDAR, null, null, null);
+    return Command.builder("use_calendar", CommandType.USE_CALENDAR)
+        .calendarName(name)
+        .build();
   }
 
   private Command parsePrintRange(String trimmed) {
@@ -377,9 +513,10 @@ public class CommandParser {
     }
     LocalDateTime start = parseDateTime(matcher.group(1));
     LocalDateTime end = parseDateTime(matcher.group(2));
-    return new Command("print_range", null, start, end, null, null, null,
-        null, null, null, null, null, null, null, null, null, null, null,
-        CommandType.PRINT_RANGE, null, null, null);
+    return Command.builder("print_range", CommandType.PRINT_RANGE)
+        .startDateTime(start)
+        .endDateTime(end)
+        .build();
   }
 
   private Command parseCreateEvent(String args) {
@@ -423,10 +560,11 @@ public class CommandParser {
     LocalDateTime end = date.atTime(ALL_DAY_END);
 
     if (parts.length == 1) {
-      return new Command("create_single", subject, start, end,
-          null, null, null, null, null, null, null,
-          null, null, null, null, null, null, null,
-          CommandType.CREATE_SINGLE, null, null, null);
+      return Command.builder("create_single", CommandType.CREATE_SINGLE)
+          .subject(subject)
+          .startDateTime(start)
+          .endDateTime(end)
+          .build();
     }
 
     if (parts.length >= 4 && parts[1].equalsIgnoreCase("repeats")) {
@@ -434,18 +572,24 @@ public class CommandParser {
 
       if (parts[3].equalsIgnoreCase("for") && parts.length >= 6) {
         int occurrences = Integer.parseInt(parts[4]);
-        return new Command("create_series", subject, start, end,
-            wd, occurrences, null, null, null, null, null,
-            null, null, null, null, null, null, null,
-            CommandType.CREATE_SERIES, null, null, null);
+        return Command.builder("create_series", CommandType.CREATE_SERIES)
+            .subject(subject)
+            .startDateTime(start)
+            .endDateTime(end)
+            .weekdays(wd)
+            .occurrences(occurrences)
+            .build();
       }
 
       if (parts[3].equalsIgnoreCase("until") && parts.length >= 5) {
         LocalDate untilDate = parseDate(parts[4]);
-        return new Command("create_series_until", subject, start, end,
-            wd, null, untilDate, null, null, null, null,
-            null, null, null, null, null, null, null,
-            CommandType.CREATE_SERIES_UNTIL, null, null, null);
+        return Command.builder("create_series_until", CommandType.CREATE_SERIES_UNTIL)
+            .subject(subject)
+            .startDateTime(start)
+            .endDateTime(end)
+            .weekdays(wd)
+            .untilDate(untilDate)
+            .build();
       }
     }
 
@@ -465,10 +609,11 @@ public class CommandParser {
     LocalDateTime end = parseDateTime(matcher.group(2));
 
     if (matcher.group(3) == null) {
-      return new Command("create_single", subject, start, end,
-          null, null, null, null, null, null, null,
-          null, null, null, null, null, null, null,
-          CommandType.CREATE_SINGLE, null, null, null);
+      return Command.builder("create_single", CommandType.CREATE_SINGLE)
+          .subject(subject)
+          .startDateTime(start)
+          .endDateTime(end)
+          .build();
     }
 
     Set<DayOfWeek> wd = parseWeekdays(matcher.group(3));
@@ -477,17 +622,23 @@ public class CommandParser {
 
     if (repeatType.equalsIgnoreCase("for")) {
       int occurrences = Integer.parseInt(repeatValue);
-      return new Command("create_series", subject, start, end,
-          wd, occurrences, null, null, null, null, null,
-          null, null, null, null, null, null, null,
-          CommandType.CREATE_SERIES, null, null, null);
+      return Command.builder("create_series", CommandType.CREATE_SERIES)
+          .subject(subject)
+          .startDateTime(start)
+          .endDateTime(end)
+          .weekdays(wd)
+          .occurrences(occurrences)
+          .build();
     }
 
     LocalDate untilDate = parseDate(repeatValue);
-    return new Command("create_series_until", subject, start, end,
-        wd, null, untilDate, null, null, null, null,
-        null, null, null, null, null, null, null,
-        CommandType.CREATE_SERIES_UNTIL, null, null, null);
+    return Command.builder("create_series_until", CommandType.CREATE_SERIES_UNTIL)
+        .subject(subject)
+        .startDateTime(start)
+        .endDateTime(end)
+        .weekdays(wd)
+        .untilDate(untilDate)
+        .build();
   }
 
   private Command parseEditCommand(String line) {
@@ -546,10 +697,15 @@ public class CommandParser {
     EditScope scopeEnum = EditScope.fromToken(scope);
     EventProperty ep = EventProperty.fromToken(property);
 
-    return new Command("edit", subject, start, null,
-        null, null, null, property, newValue, scope, null,
-        null, null, null, null, null, null, null,
-        CommandType.EDIT, scopeEnum, ep, null);
+    return Command.builder("edit", CommandType.EDIT)
+        .subject(subject)
+        .startDateTime(start)
+        .property(property)
+        .newValue(newValue)
+        .editScope(scope)
+        .editScopeEnum(scopeEnum)
+        .eventPropertyEnum(ep)
+        .build();
   }
 
   private Command parseCopyEvent(String line) {
@@ -585,10 +741,12 @@ public class CommandParser {
     String targetCal = unquote(m.group(2));
     LocalDateTime targetStart = parseDateTime(m.group(3));
 
-    return new Command("copy_event", subject, sourceStart, null,
-        null, null, null, null, null, null, null,
-        null, null, targetCal, targetStart, null, null, null,
-        CommandType.COPY_EVENT, null, null, null);
+    return Command.builder("copy_event", CommandType.COPY_EVENT)
+        .subject(subject)
+        .startDateTime(sourceStart)
+        .targetCalendar(targetCal)
+        .targetDateTime(targetStart)
+        .build();
   }
 
   private Command parseCopyOnDate(String line) {
@@ -604,10 +762,11 @@ public class CommandParser {
     String targetCal = unquote(m.group(2));
     LocalDate targetDate = parseDate(m.group(3));
 
-    return new Command("copy_on_date", null, null, null,
-        null, null, null, null, null, null, null,
-        null, null, targetCal, targetDate.atStartOfDay(), sourceDate, null, null,
-        CommandType.COPY_ON_DATE, null, null, null);
+    return Command.builder("copy_on_date", CommandType.COPY_ON_DATE)
+        .targetCalendar(targetCal)
+        .targetDateTime(targetDate.atStartOfDay())
+        .day(sourceDate)
+        .build();
   }
 
   private Command parseCopyBetween(String line) {
@@ -626,10 +785,12 @@ public class CommandParser {
     String targetCal = unquote(m.group(3));
     LocalDate targetStart = parseDate(m.group(4));
 
-    return new Command("copy_between", null, null, null,
-        null, null, null, null, null, null, null,
-        null, null, targetCal, targetStart.atStartOfDay(), null, start, end,
-        CommandType.COPY_BETWEEN, null, null, null);
+    return Command.builder("copy_between", CommandType.COPY_BETWEEN)
+        .targetCalendar(targetCal)
+        .targetDateTime(targetStart.atStartOfDay())
+        .rangeStart(start)
+        .rangeEnd(end)
+        .build();
   }
 
   private LocalDate parseDate(String dateStr) {
