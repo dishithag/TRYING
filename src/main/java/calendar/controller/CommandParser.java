@@ -62,6 +62,14 @@ public class CommandParser {
     private final EventProperty eventPropertyEnum;
     private final CalendarProperty calendarPropertyEnum;
 
+    /**
+     * Builds an immutable {@link Command} instance from the populated builder values.
+     * Fields that are irrelevant for the parsed command remain {@code null}; enums capture
+     * normalized values alongside legacy string tokens for compatibility with existing
+     * consumers.
+     *
+     * @param builder source of parsed tokens and enums for this command
+     */
     private Command(Builder builder) {
       this.type = builder.type;
       this.subject = builder.subject;
@@ -87,14 +95,31 @@ public class CommandParser {
       this.calendarPropertyEnum = builder.calendarPropertyEnum;
     }
 
+    /**
+     * Creates a builder seeded with both the legacy string type and the normalized enum value.
+     *
+     * @param type     raw command type token (e.g., "create_calendar", "edit")
+     * @param typeEnum normalized command type enum
+     * @return configured builder instance
+     */
     public static Builder builder(String type, CommandType typeEnum) {
       return new Builder(type, typeEnum);
     }
 
+    /**
+     * Creates a builder seeded only with the legacy string type token.
+     *
+     * @param type raw command type token (e.g., "create_calendar", "edit")
+     * @return configured builder instance
+     */
     public static Builder builder(String type) {
       return new Builder(type, null);
     }
 
+    /**
+     * Fluent builder used to populate the appropriate fields for a parsed command variant.
+     * Unset fields remain {@code null} in the resulting {@link Command}.
+     */
     public static class Builder {
       private final String type;
       private final CommandType typeEnum;
@@ -224,6 +249,11 @@ public class CommandParser {
         return this;
       }
 
+      /**
+       * Finalizes the builder into an immutable {@link Command} instance.
+       *
+       * @return constructed {@link Command}
+       */
       public Command build() {
         return new Command(this);
       }
