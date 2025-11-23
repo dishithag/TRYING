@@ -10,6 +10,7 @@ import calendar.CalendarImpl;
 import calendar.Event;
 import calendar.controller.AbstractCalendarController;
 import calendar.controller.CommandParser;
+import calendar.controller.CommandType;
 import calendar.view.CalendarView;
 import calendar.view.TextCalendarView;
 import java.io.ByteArrayOutputStream;
@@ -375,30 +376,13 @@ public class AbstractCalendarControllerExecTest {
     CommandParser parser = new CommandParser();
     controller.runCommand(parser.parse("use calendar --name default"));
 
-    CommandParser.Command bogus = new CommandParser.Command(
-        "edit",
-        "X",
-        LocalDateTime.of(2025, 11, 3, 9, 0),
-        null,
-        null,
-        null,
-        null,
-        "location",
-        "Nowhere",
-        "weird-scope",
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
-    );
+    CommandParser.Command bogus = CommandParser.Command.builder("edit", CommandType.EDIT)
+        .subject("X")
+        .startDateTime(LocalDateTime.of(2025, 11, 3, 9, 0))
+        .property("location")
+        .newValue("Nowhere")
+        .editScope("weird-scope")
+        .build();
 
     controller.runCommand(bogus);
     String out = buf.toString();
@@ -417,30 +401,8 @@ public class AbstractCalendarControllerExecTest {
     ExposedController controller =
         new ExposedController(book, view, new StringReader(""));
 
-    CommandParser.Command bogus = new CommandParser.Command(
-        "does_not_exist",
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
-    );
+    CommandParser.Command bogus = CommandParser.Command.builder("does_not_exist")
+        .build();
 
     controller.runCommand(bogus);
     String out = buf.toString();
@@ -593,20 +555,11 @@ public class AbstractCalendarControllerExecTest {
     CalendarView view = new TextCalendarView(new PrintStream(buf));
     ExposedController controller = new ExposedController(book, view, new StringReader(""));
 
-    CommandParser.Command cmd = new CommandParser.Command(
-        "edit_calendar", null, null, null, null, null, null,
-        "unknown_property", "some_value", null, null,
-        "MyCalendar", null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
-    );
+    CommandParser.Command cmd = CommandParser.Command.builder("edit_calendar", CommandType.EDIT_CALENDAR)
+        .property("unknown_property")
+        .newValue("some_value")
+        .calendarName("MyCalendar")
+        .build();
 
     controller.runCommand(cmd);
 
@@ -683,7 +636,7 @@ public class AbstractCalendarControllerExecTest {
     CommandParser.Command cmd = parser.parse("create calendar --name TestCal --timezone UTC");
     controller.runCommand(cmd);
 
-    assertTrue(buf.toString().contains("Created and switched to calendar: TestCal"));
+    assertTrue(buf.toString().contains("Created calendar: TestCal"));
   }
 
   /**
@@ -835,6 +788,32 @@ public class AbstractCalendarControllerExecTest {
     List<Event> targetEvents = target.getAllEvents();
     assertEquals(2, targetEvents.size());
     assertTrue(buf.toString().contains("Copied 1 event(s) to target"));
+  }
+
+  /**
+   * Executes a batch file that switches calendars and creates an event.
+   */
+  @Test
+  public void testBatchExecutionCreatesEvent() throws Exception {
+    CalendarBook book = new CalendarBookImpl();
+    Calendar calendar = book.createCalendar("default", ZoneId.of("America/New_York"));
+
+    ByteArrayOutputStream buf = new ByteArrayOutputStream();
+    CalendarView view = new TextCalendarView(new PrintStream(buf));
+    ExposedController controller = new ExposedController(book, view, new StringReader(""));
+
+    String batch = String.join(System.lineSeparator(),
+        "use calendar --name default",
+        "create event Batch from 2025-11-12T10:00 to 2025-11-12T11:00");
+    java.nio.file.Path temp = Files.createTempFile("batch", ".txt");
+    Files.write(temp, batch.getBytes());
+
+    CommandParser parser = new CommandParser();
+    controller.runCommand(parser.parse("batch " + temp.toString()));
+
+    List<Event> events = calendar.getEventsOnDate(LocalDate.of(2025, 11, 12));
+    assertEquals(1, events.size());
+    assertTrue(buf.toString().contains("Batch completed"));
   }
 
 

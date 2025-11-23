@@ -23,10 +23,10 @@ public class CommandParserTest {
   public void testParseTimedCreate() {
     Command c = parser.parse(
         "create event \"Team Standup\" from 2025-11-03T09:00 to 2025-11-03T09:30");
-    assertEquals("create_single", c.type);
-    assertEquals("Team Standup", c.subject);
-    assertEquals("2025-11-03T09:00", c.startDateTime.toString());
-    assertEquals("2025-11-03T09:30", c.endDateTime.toString());
+    assertEquals("create_single", c.getType());
+    assertEquals("Team Standup", c.getSubject());
+    assertEquals("2025-11-03T09:00", c.getStartDateTime().toString());
+    assertEquals("2025-11-03T09:30", c.getEndDateTime().toString());
   }
 
   /**
@@ -36,11 +36,11 @@ public class CommandParserTest {
   public void testParseAllDayRepeating() {
     Command c = parser.parse(
         "create event Holiday on 2025-11-05 repeats WF for 4 times");
-    assertEquals("create_series", c.type);
-    assertEquals("Holiday", c.subject);
-    assertTrue(c.weekdays.contains(DayOfWeek.WEDNESDAY));
-    assertTrue(c.weekdays.contains(DayOfWeek.FRIDAY));
-    assertEquals(Integer.valueOf(4), c.occurrences);
+    assertEquals("create_series", c.getType());
+    assertEquals("Holiday", c.getSubject());
+    assertTrue(c.getWeekdays().contains(DayOfWeek.WEDNESDAY));
+    assertTrue(c.getWeekdays().contains(DayOfWeek.FRIDAY));
+    assertEquals(Integer.valueOf(4), c.getOccurrences());
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -62,8 +62,19 @@ public class CommandParserTest {
   @Test
   public void testExportCommand() {
     Command c = parser.parse("export cal res/calendar.csv");
-    assertEquals("export", c.type);
-    assertEquals("res/calendar.csv", c.fileName);
+    assertEquals("export", c.getType());
+    assertEquals("res/calendar.csv", c.getFileName());
+  }
+
+  /**
+   * Batch command should capture the batch file path.
+   */
+  @Test
+  public void testBatchCommand() {
+    Command c = parser.parse("batch scripts/demo.txt");
+    assertEquals("batch", c.getType());
+    assertEquals("scripts/demo.txt", c.getBatchFile());
+    assertEquals(calendar.controller.CommandType.BATCH, c.getTypeEnum());
   }
 
 
@@ -75,9 +86,9 @@ public class CommandParserTest {
   public void testParsePrintRange() {
     CommandParser.Command c = parser.parse(
         "print events from 2025-11-03T00:00 to 2025-11-05T23:59");
-    assertEquals("print_range", c.type);
-    assertEquals(LocalDateTime.of(2025, 11, 3, 0, 0), c.startDateTime);
-    assertEquals(LocalDateTime.of(2025, 11, 5, 23, 59), c.endDateTime);
+    assertEquals("print_range", c.getType());
+    assertEquals(LocalDateTime.of(2025, 11, 3, 0, 0), c.getStartDateTime());
+    assertEquals(LocalDateTime.of(2025, 11, 5, 23, 59), c.getEndDateTime());
   }
 
   /**
@@ -86,8 +97,8 @@ public class CommandParserTest {
   @Test
   public void testParseExport() {
     CommandParser.Command c = parser.parse("export cal res/calendar.csv");
-    assertEquals("export", c.type);
-    assertEquals("res/calendar.csv", c.fileName);
+    assertEquals("export", c.getType());
+    assertEquals("res/calendar.csv", c.getFileName());
   }
 
   /**
@@ -119,10 +130,10 @@ public class CommandParserTest {
   public void testCreateSimpleAllDayEvent() {
     Command cmd = parser.parse("create event Meeting on 2025-11-10");
 
-    assertEquals("create_single", cmd.type);
-    assertEquals("Meeting", cmd.subject);
-    assertEquals(LocalDateTime.of(2025, 11, 10, 8, 0), cmd.startDateTime);
-    assertEquals(LocalDateTime.of(2025, 11, 10, 17, 0), cmd.endDateTime);
+    assertEquals("create_single", cmd.getType());
+    assertEquals("Meeting", cmd.getSubject());
+    assertEquals(LocalDateTime.of(2025, 11, 10, 8, 0), cmd.getStartDateTime());
+    assertEquals(LocalDateTime.of(2025, 11, 10, 17, 0), cmd.getEndDateTime());
   }
 
   /**
@@ -134,14 +145,14 @@ public class CommandParserTest {
   public void testCreateAllDayEventRepeatsForOccurrences() {
     Command cmd = parser.parse("create event Standup on 2025-11-10 repeats MWF for 5 times");
 
-    assertEquals("create_series", cmd.type);
-    assertEquals("Standup", cmd.subject);
-    assertEquals(LocalDateTime.of(2025, 11, 10, 8, 0), cmd.startDateTime);
-    assertEquals(LocalDateTime.of(2025, 11, 10, 17, 0), cmd.endDateTime);
-    assertTrue(cmd.weekdays.contains(DayOfWeek.MONDAY));
-    assertTrue(cmd.weekdays.contains(DayOfWeek.WEDNESDAY));
-    assertTrue(cmd.weekdays.contains(DayOfWeek.FRIDAY));
-    assertEquals(Integer.valueOf(5), cmd.occurrences);
+    assertEquals("create_series", cmd.getType());
+    assertEquals("Standup", cmd.getSubject());
+    assertEquals(LocalDateTime.of(2025, 11, 10, 8, 0), cmd.getStartDateTime());
+    assertEquals(LocalDateTime.of(2025, 11, 10, 17, 0), cmd.getEndDateTime());
+    assertTrue(cmd.getWeekdays().contains(DayOfWeek.MONDAY));
+    assertTrue(cmd.getWeekdays().contains(DayOfWeek.WEDNESDAY));
+    assertTrue(cmd.getWeekdays().contains(DayOfWeek.FRIDAY));
+    assertEquals(Integer.valueOf(5), cmd.getOccurrences());
   }
 
   /**
@@ -153,13 +164,13 @@ public class CommandParserTest {
   public void testCreateAllDayEventRepeatsUntilDate() {
     Command cmd = parser.parse("create event Review on 2025-11-10 repeats TR until 2025-12-31");
 
-    assertEquals("create_series_until", cmd.type);
-    assertEquals("Review", cmd.subject);
-    assertEquals(LocalDateTime.of(2025, 11, 10, 8, 0), cmd.startDateTime);
-    assertEquals(LocalDateTime.of(2025, 11, 10, 17, 0), cmd.endDateTime);
-    assertTrue(cmd.weekdays.contains(DayOfWeek.TUESDAY));
-    assertTrue(cmd.weekdays.contains(DayOfWeek.THURSDAY));
-    assertEquals(LocalDate.of(2025, 12, 31), cmd.untilDate);
+    assertEquals("create_series_until", cmd.getType());
+    assertEquals("Review", cmd.getSubject());
+    assertEquals(LocalDateTime.of(2025, 11, 10, 8, 0), cmd.getStartDateTime());
+    assertEquals(LocalDateTime.of(2025, 11, 10, 17, 0), cmd.getEndDateTime());
+    assertTrue(cmd.getWeekdays().contains(DayOfWeek.TUESDAY));
+    assertTrue(cmd.getWeekdays().contains(DayOfWeek.THURSDAY));
+    assertEquals(LocalDate.of(2025, 12, 31), cmd.getUntilDate());
   }
 
   /**
@@ -205,9 +216,9 @@ public class CommandParserTest {
   public void testCreateAllDayEventWithQuotedSubject() {
     Command cmd = parser.parse("create event \"Team Meeting\" on 2025-11-10");
 
-    assertEquals("create_single", cmd.type);
-    assertEquals("Team Meeting", cmd.subject);
-    assertEquals(LocalDateTime.of(2025, 11, 10, 8, 0), cmd.startDateTime);
+    assertEquals("create_single", cmd.getType());
+    assertEquals("Team Meeting", cmd.getSubject());
+    assertEquals(LocalDateTime.of(2025, 11, 10, 8, 0), cmd.getStartDateTime());
   }
 
 
@@ -218,10 +229,10 @@ public class CommandParserTest {
   public void testCreateTimedEvent() {
     Command cmd = parser.parse("create event Meeting from 2025-11-10T15:00 to 2025-11-10T16:00");
 
-    assertEquals("create_single", cmd.type);
-    assertEquals("Meeting", cmd.subject);
-    assertEquals(LocalDateTime.of(2025, 11, 10, 15, 0), cmd.startDateTime);
-    assertEquals(LocalDateTime.of(2025, 11, 10, 16, 0), cmd.endDateTime);
+    assertEquals("create_single", cmd.getType());
+    assertEquals("Meeting", cmd.getSubject());
+    assertEquals(LocalDateTime.of(2025, 11, 10, 15, 0), cmd.getStartDateTime());
+    assertEquals(LocalDateTime.of(2025, 11, 10, 16, 0), cmd.getEndDateTime());
   }
 
   /**
@@ -233,12 +244,12 @@ public class CommandParserTest {
         + "2025-11-10T09:30 repeats "
         + "MWF for 10 times");
 
-    assertEquals("create_series", cmd.type);
-    assertEquals("Standup", cmd.subject);
-    assertTrue(cmd.weekdays.contains(DayOfWeek.MONDAY));
-    assertTrue(cmd.weekdays.contains(DayOfWeek.WEDNESDAY));
-    assertTrue(cmd.weekdays.contains(DayOfWeek.FRIDAY));
-    assertEquals(Integer.valueOf(10), cmd.occurrences);
+    assertEquals("create_series", cmd.getType());
+    assertEquals("Standup", cmd.getSubject());
+    assertTrue(cmd.getWeekdays().contains(DayOfWeek.MONDAY));
+    assertTrue(cmd.getWeekdays().contains(DayOfWeek.WEDNESDAY));
+    assertTrue(cmd.getWeekdays().contains(DayOfWeek.FRIDAY));
+    assertEquals(Integer.valueOf(10), cmd.getOccurrences());
   }
 
   /**
@@ -249,11 +260,11 @@ public class CommandParserTest {
     Command cmd = parser.parse("create event Review from 2025-11-10T1"
         + "4:00 to 2025-11-10T15:00 repeats TR until 2025-12-31");
 
-    assertEquals("create_series_until", cmd.type);
-    assertEquals("Review", cmd.subject);
-    assertTrue(cmd.weekdays.contains(DayOfWeek.TUESDAY));
-    assertTrue(cmd.weekdays.contains(DayOfWeek.THURSDAY));
-    assertEquals(LocalDate.of(2025, 12, 31), cmd.untilDate);
+    assertEquals("create_series_until", cmd.getType());
+    assertEquals("Review", cmd.getSubject());
+    assertTrue(cmd.getWeekdays().contains(DayOfWeek.TUESDAY));
+    assertTrue(cmd.getWeekdays().contains(DayOfWeek.THURSDAY));
+    assertEquals(LocalDate.of(2025, 12, 31), cmd.getUntilDate());
   }
 
   /**
@@ -300,11 +311,11 @@ public class CommandParserTest {
   public void testEditQuotedSubjectAndQuotedValue() {
     CommandParser.Command c = parser.parse(
         "edit event description \"Daily standup\" from 2025-11-03T09:00 with \"Updated desc\"");
-    assertEquals("edit", c.type);
-    assertEquals("description", c.property);
-    assertEquals("Daily standup", c.subject);
-    assertEquals("Updated desc", c.newValue);
-    assertEquals(LocalDateTime.of(2025, 11, 3, 9, 0), c.startDateTime);
+    assertEquals("edit", c.getType());
+    assertEquals("description", c.getProperty());
+    assertEquals("Daily standup", c.getSubject());
+    assertEquals("Updated desc", c.getNewValue());
+    assertEquals(LocalDateTime.of(2025, 11, 3, 9, 0), c.getStartDateTime());
   }
 
   /**
@@ -349,9 +360,9 @@ public class CommandParserTest {
     Command cmd = parser.parse(
         "create event Weekend on 2025-11-08 repeats S for 2 times");
 
-    assertEquals("create_series", cmd.type);
-    assertTrue(cmd.weekdays.contains(DayOfWeek.SATURDAY));
-    assertEquals(1, cmd.weekdays.size());
+    assertEquals("create_series", cmd.getType());
+    assertTrue(cmd.getWeekdays().contains(DayOfWeek.SATURDAY));
+    assertEquals(1, cmd.getWeekdays().size());
   }
 
   /**
@@ -362,9 +373,9 @@ public class CommandParserTest {
     Command cmd = parser.parse(
         "create event Brunch on 2025-11-09 repeats U for 2 times");
 
-    assertEquals("create_series", cmd.type);
-    assertTrue(cmd.weekdays.contains(DayOfWeek.SUNDAY));
-    assertEquals(1, cmd.weekdays.size());
+    assertEquals("create_series", cmd.getType());
+    assertTrue(cmd.getWeekdays().contains(DayOfWeek.SUNDAY));
+    assertEquals(1, cmd.getWeekdays().size());
   }
 
   /**
@@ -375,10 +386,10 @@ public class CommandParserTest {
     Command cmd = parser.parse(
         "create event Weekend on 2025-11-08 repeats SU for 2 times");
 
-    assertEquals("create_series", cmd.type);
-    assertTrue(cmd.weekdays.contains(DayOfWeek.SATURDAY));
-    assertTrue(cmd.weekdays.contains(DayOfWeek.SUNDAY));
-    assertEquals(2, cmd.weekdays.size());
+    assertEquals("create_series", cmd.getType());
+    assertTrue(cmd.getWeekdays().contains(DayOfWeek.SATURDAY));
+    assertTrue(cmd.getWeekdays().contains(DayOfWeek.SUNDAY));
+    assertEquals(2, cmd.getWeekdays().size());
   }
 
   /**
@@ -397,9 +408,9 @@ public class CommandParserTest {
     Command cmd = parser.parse("create calendar --name "
         + "\"My Calendar\" --timezone America/New_York");
 
-    assertEquals("create_calendar", cmd.type);
-    assertEquals("My Calendar", cmd.calendarName);
-    assertEquals("America/New_York", cmd.timezoneId);
+    assertEquals("create_calendar", cmd.getType());
+    assertEquals("My Calendar", cmd.getCalendarName());
+    assertEquals("America/New_York", cmd.getTimezoneId());
   }
 
   /**
@@ -409,9 +420,9 @@ public class CommandParserTest {
   public void testParseCreateCalendar_noQuotes() {
     Command cmd = parser.parse("create calendar --name MyCalendar --timezone Europe/London");
 
-    assertEquals("create_calendar", cmd.type);
-    assertEquals("MyCalendar", cmd.calendarName);
-    assertEquals("Europe/London", cmd.timezoneId);
+    assertEquals("create_calendar", cmd.getType());
+    assertEquals("MyCalendar", cmd.getCalendarName());
+    assertEquals("Europe/London", cmd.getTimezoneId());
   }
 
   /**
@@ -421,10 +432,10 @@ public class CommandParserTest {
   public void testParseEditCalendar_name() {
     Command cmd = parser.parse("edit calendar --name \"Old Name\" --property name \"New Name\"");
 
-    assertEquals("edit_calendar", cmd.type);
-    assertEquals("Old Name", cmd.calendarName);
-    assertEquals("name", cmd.property);
-    assertEquals("New Name", cmd.newValue);
+    assertEquals("edit_calendar", cmd.getType());
+    assertEquals("Old Name", cmd.getCalendarName());
+    assertEquals("name", cmd.getProperty());
+    assertEquals("New Name", cmd.getNewValue());
   }
 
   /**
@@ -435,10 +446,10 @@ public class CommandParserTest {
     Command cmd = parser.parse("edit calendar --name MyCalendar"
         + " --property timezone America/Los_Angeles");
 
-    assertEquals("edit_calendar", cmd.type);
-    assertEquals("MyCalendar", cmd.calendarName);
-    assertEquals("timezone", cmd.property);
-    assertEquals("America/Los_Angeles", cmd.newValue);
+    assertEquals("edit_calendar", cmd.getType());
+    assertEquals("MyCalendar", cmd.getCalendarName());
+    assertEquals("timezone", cmd.getProperty());
+    assertEquals("America/Los_Angeles", cmd.getNewValue());
   }
 
   /**
@@ -448,8 +459,8 @@ public class CommandParserTest {
   public void testParseUseCalendar() {
     Command cmd = parser.parse("use calendar --name \"Work Calendar\"");
 
-    assertEquals("use_calendar", cmd.type);
-    assertEquals("Work Calendar", cmd.calendarName);
+    assertEquals("use_calendar", cmd.getType());
+    assertEquals("Work Calendar", cmd.getCalendarName());
   }
 
   /**
@@ -459,8 +470,8 @@ public class CommandParserTest {
   public void testParseUseCalendar_noQuotes() {
     Command cmd = parser.parse("use calendar --name WorkCalendar");
 
-    assertEquals("use_calendar", cmd.type);
-    assertEquals("WorkCalendar", cmd.calendarName);
+    assertEquals("use_calendar", cmd.getType());
+    assertEquals("WorkCalendar", cmd.getCalendarName());
   }
 
 
@@ -471,9 +482,9 @@ public class CommandParserTest {
   public void testParsePrintOn_usesDay() {
     Command cmd = parser.parse("print events on 2025-11-15");
 
-    assertEquals("print_on", cmd.type);
-    assertNotNull(cmd.startDateTime);
-    assertEquals(LocalDate.of(2025, 11, 15), cmd.startDateTime.toLocalDate());
+    assertEquals("print_on", cmd.getType());
+    assertNotNull(cmd.getStartDateTime());
+    assertEquals(LocalDate.of(2025, 11, 15), cmd.getStartDateTime().toLocalDate());
   }
 
   /**
@@ -483,11 +494,11 @@ public class CommandParserTest {
   public void testParsePrintRange_usesRangeFields() {
     Command cmd = parser.parse("print events from 2025-11-01T00:00 to 2025-11-30T23:59");
 
-    assertEquals("print_range", cmd.type);
-    assertNotNull(cmd.startDateTime);
-    assertNotNull(cmd.endDateTime);
-    assertEquals(LocalDateTime.of(2025, 11, 1, 0, 0), cmd.startDateTime);
-    assertEquals(LocalDateTime.of(2025, 11, 30, 23, 59), cmd.endDateTime);
+    assertEquals("print_range", cmd.getType());
+    assertNotNull(cmd.getStartDateTime());
+    assertNotNull(cmd.getEndDateTime());
+    assertEquals(LocalDateTime.of(2025, 11, 1, 0, 0), cmd.getStartDateTime());
+    assertEquals(LocalDateTime.of(2025, 11, 30, 23, 59), cmd.getEndDateTime());
   }
 
   /**
@@ -571,11 +582,11 @@ public class CommandParserTest {
         "copy event \"Team Meeting\" on 2025-11-10T09:00 "
             + "--target \"Work Calendar\" to 2025-11-15T14:00");
 
-    assertEquals("copy_event", cmd.type);
-    assertEquals("Team Meeting", cmd.subject);
-    assertEquals(LocalDateTime.of(2025, 11, 10, 9, 0), cmd.startDateTime);
-    assertEquals("Work Calendar", cmd.targetCalendar);
-    assertEquals(LocalDateTime.of(2025, 11, 15, 14, 0), cmd.targetDateTime);
+    assertEquals("copy_event", cmd.getType());
+    assertEquals("Team Meeting", cmd.getSubject());
+    assertEquals(LocalDateTime.of(2025, 11, 10, 9, 0), cmd.getStartDateTime());
+    assertEquals("Work Calendar", cmd.getTargetCalendar());
+    assertEquals(LocalDateTime.of(2025, 11, 15, 14, 0), cmd.getTargetDateTime());
   }
 
   /**
@@ -586,11 +597,11 @@ public class CommandParserTest {
     CommandParser.Command cmd = parser.parse(
         "copy event Meeting on 2025-11-10T09:00 --target target to 2025-11-15T14:00");
 
-    assertEquals("copy_event", cmd.type);
-    assertEquals("Meeting", cmd.subject);
-    assertEquals(LocalDateTime.of(2025, 11, 10, 9, 0), cmd.startDateTime);
-    assertEquals("target", cmd.targetCalendar);
-    assertEquals(LocalDateTime.of(2025, 11, 15, 14, 0), cmd.targetDateTime);
+    assertEquals("copy_event", cmd.getType());
+    assertEquals("Meeting", cmd.getSubject());
+    assertEquals(LocalDateTime.of(2025, 11, 10, 9, 0), cmd.getStartDateTime());
+    assertEquals("target", cmd.getTargetCalendar());
+    assertEquals(LocalDateTime.of(2025, 11, 15, 14, 0), cmd.getTargetDateTime());
   }
 
   /**
@@ -718,8 +729,8 @@ public class CommandParserTest {
     Command cmd = parser.parse(
         "copy events on 2025-11-10 --target \"My Calendar\" to 2025-11-15");
 
-    assertEquals("copy_on_date", cmd.type);
-    assertEquals("My Calendar", cmd.targetCalendar);
+    assertEquals("copy_on_date", cmd.getType());
+    assertEquals("My Calendar", cmd.getTargetCalendar());
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -772,11 +783,11 @@ public class CommandParserTest {
 
     Command cmd = parser.parse("create event \"Team Meeting\" on 2025-11-10");
 
-    assertEquals("create_single", cmd.type);
+    assertEquals("create_single", cmd.getType());
 
-    assertEquals("Team Meeting", cmd.subject);
+    assertEquals("Team Meeting", cmd.getSubject());
 
-    assertEquals(LocalDateTime.of(2025, 11, 10, 8, 0), cmd.startDateTime);
+    assertEquals(LocalDateTime.of(2025, 11, 10, 8, 0), cmd.getStartDateTime());
 
   }
 
@@ -788,11 +799,11 @@ public class CommandParserTest {
         +
         "from 2025-11-10T09:00 to 2025-11-10T10:00");
 
-    assertEquals("create_single", cmd.type);
+    assertEquals("create_single", cmd.getType());
 
-    assertEquals("Team Meeting", cmd.subject);
+    assertEquals("Team Meeting", cmd.getSubject());
 
-    assertEquals(LocalDateTime.of(2025, 11, 10, 9, 0), cmd.startDateTime);
+    assertEquals(LocalDateTime.of(2025, 11, 10, 9, 0), cmd.getStartDateTime());
 
   }
 
@@ -802,9 +813,9 @@ public class CommandParserTest {
 
     Command cmd = parser.parse("create event Meeting from 2025-11-10T09:00 to 2025-11-10T10:00");
 
-    assertEquals("create_single", cmd.type);
+    assertEquals("create_single", cmd.getType());
 
-    assertEquals("Meeting", cmd.subject);
+    assertEquals("Meeting", cmd.getSubject());
 
   }
 
@@ -814,9 +825,9 @@ public class CommandParserTest {
 
     Command cmd = parser.parse("create event Holiday on 2025-11-10");
 
-    assertEquals("create_single", cmd.type);
+    assertEquals("create_single", cmd.getType());
 
-    assertEquals("Holiday", cmd.subject);
+    assertEquals("Holiday", cmd.getSubject());
 
   }
 }
