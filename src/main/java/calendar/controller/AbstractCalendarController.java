@@ -107,8 +107,7 @@ public abstract class AbstractCalendarController implements CalendarController {
         case CREATE_CALENDAR:
           {
           book.createCalendar(cmd.getCalendarName(), ZoneId.of(cmd.getTimezoneId()));
-          context.use(cmd.getCalendarName());
-          view.displayMessage("Created and switched to calendar: " + cmd.getCalendarName());
+          view.displayMessage("Created calendar: " + cmd.getCalendarName());
           break;
           }
         case EDIT_CALENDAR:

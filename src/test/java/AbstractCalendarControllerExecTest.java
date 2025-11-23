@@ -636,7 +636,7 @@ public class AbstractCalendarControllerExecTest {
     CommandParser.Command cmd = parser.parse("create calendar --name TestCal --timezone UTC");
     controller.runCommand(cmd);
 
-    assertTrue(buf.toString().contains("Created and switched to calendar: TestCal"));
+    assertTrue(buf.toString().contains("Created calendar: TestCal"));
   }
 
   /**
