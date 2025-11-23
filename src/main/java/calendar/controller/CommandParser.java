@@ -149,101 +149,221 @@ public class CommandParser {
         this.typeEnum = typeEnum;
       }
 
+      /**
+       * Specifies the subject for the command.
+       *
+       * @param subject subject string
+       * @return builder instance
+       */
       public Builder subject(String subject) {
         this.subject = subject;
         return this;
       }
 
+      /**
+       * Sets the start date/time in ISO-8601.
+       *
+       * @param startDateTime start date-time
+       * @return builder instance
+       */
       public Builder startDateTime(LocalDateTime startDateTime) {
         this.startDateTime = startDateTime;
         return this;
       }
 
+      /**
+       * Sets the end date/time in ISO-8601.
+       *
+       * @param endDateTime end date-time
+       * @return builder instance
+       */
       public Builder endDateTime(LocalDateTime endDateTime) {
         this.endDateTime = endDateTime;
         return this;
       }
 
+      /**
+       * Specifies recurring weekdays for an event.
+       *
+       * @param weekdays recurrence days
+       * @return builder instance
+       */
       public Builder weekdays(Set<DayOfWeek> weekdays) {
         this.weekdays = weekdays;
         return this;
       }
 
+      /**
+       * Sets the number of occurrences for recurrence.
+       *
+       * @param occurrences count of occurrences
+       * @return builder instance
+       */
       public Builder occurrences(Integer occurrences) {
         this.occurrences = occurrences;
         return this;
       }
 
+      /**
+       * Sets the recurrence end date.
+       *
+       * @param untilDate inclusive end date
+       * @return builder instance
+       */
       public Builder untilDate(LocalDate untilDate) {
         this.untilDate = untilDate;
         return this;
       }
 
+      /**
+       * Specifies the property being edited.
+       *
+       * @param property textual property name
+       * @return builder instance
+       */
       public Builder property(String property) {
         this.property = property;
         return this;
       }
 
+      /**
+       * Sets a new string value for the property being edited.
+       *
+       * @param newValue replacement value
+       * @return builder instance
+       */
       public Builder newValue(String newValue) {
         this.newValue = newValue;
         return this;
       }
 
+      /**
+       * Specifies the textual edit scope.
+       *
+       * @param editScope scope string
+       * @return builder instance
+       */
       public Builder editScope(String editScope) {
         this.editScope = editScope;
         return this;
       }
 
+      /**
+       * Sets the export file name.
+       *
+       * @param fileName output file name
+       * @return builder instance
+       */
       public Builder fileName(String fileName) {
         this.fileName = fileName;
         return this;
       }
 
+      /**
+       * Sets the calendar name for create/edit/use commands.
+       *
+       * @param calendarName calendar identifier
+       * @return builder instance
+       */
       public Builder calendarName(String calendarName) {
         this.calendarName = calendarName;
         return this;
       }
 
+      /**
+       * Specifies the timezone identifier for calendar operations.
+       *
+       * @param timezoneId IANA timezone id
+       * @return builder instance
+       */
       public Builder timezoneId(String timezoneId) {
         this.timezoneId = timezoneId;
         return this;
       }
 
+      /**
+       * Sets the target calendar for copy commands.
+       *
+       * @param targetCalendar target calendar name
+       * @return builder instance
+       */
       public Builder targetCalendar(String targetCalendar) {
         this.targetCalendar = targetCalendar;
         return this;
       }
 
+      /**
+       * Specifies the target start date/time for copies.
+       *
+       * @param targetDateTime destination date-time
+       * @return builder instance
+       */
       public Builder targetDateTime(LocalDateTime targetDateTime) {
         this.targetDateTime = targetDateTime;
         return this;
       }
 
+      /**
+       * Sets a specific day for daily copy operations.
+       *
+       * @param day date to copy
+       * @return builder instance
+       */
       public Builder day(LocalDate day) {
         this.day = day;
         return this;
       }
 
+      /**
+       * Specifies the start of a date range.
+       *
+       * @param rangeStart inclusive range start
+       * @return builder instance
+       */
       public Builder rangeStart(LocalDate rangeStart) {
         this.rangeStart = rangeStart;
         return this;
       }
 
+      /**
+       * Specifies the end of a date range.
+       *
+       * @param rangeEnd inclusive range end
+       * @return builder instance
+       */
       public Builder rangeEnd(LocalDate rangeEnd) {
         this.rangeEnd = rangeEnd;
         return this;
       }
 
+      /**
+       * Sets the parsed edit scope enum.
+       *
+       * @param editScopeEnum edit scope
+       * @return builder instance
+       */
       public Builder editScopeEnum(EditScope editScopeEnum) {
         this.editScopeEnum = editScopeEnum;
         return this;
       }
 
+      /**
+       * Sets the parsed event property enum.
+       *
+       * @param eventPropertyEnum event property
+       * @return builder instance
+       */
       public Builder eventPropertyEnum(EventProperty eventPropertyEnum) {
         this.eventPropertyEnum = eventPropertyEnum;
         return this;
       }
 
+      /**
+       * Sets the parsed calendar property enum.
+       *
+       * @param calendarPropertyEnum calendar property
+       * @return builder instance
+       */
       public Builder calendarPropertyEnum(CalendarProperty calendarPropertyEnum) {
         this.calendarPropertyEnum = calendarPropertyEnum;
         return this;
