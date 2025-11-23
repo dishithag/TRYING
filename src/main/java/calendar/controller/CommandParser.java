@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
  * Parses user command strings into structured commands with typed enums.
  * Behavior and error messages are preserved.
  */
-public class CommandParser {
+public class CommandParser implements CommandParsingStrategy {
 
   private static final DateTimeFormatter DATE_FMT =
       DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -49,6 +49,7 @@ public class CommandParser {
     private final String newValue;
     private final String editScope;
     private final String fileName;
+    private final String batchFile;
     private final String calendarName;
     private final String timezoneId;
     private final String targetCalendar;
@@ -82,6 +83,7 @@ public class CommandParser {
       this.newValue = builder.newValue;
       this.editScope = builder.editScope;
       this.fileName = builder.fileName;
+      this.batchFile = builder.batchFile;
       this.calendarName = builder.calendarName;
       this.timezoneId = builder.timezoneId;
       this.targetCalendar = builder.targetCalendar;
@@ -133,6 +135,7 @@ public class CommandParser {
       private String newValue;
       private String editScope;
       private String fileName;
+      private String batchFile;
       private String calendarName;
       private String timezoneId;
       private String targetCalendar;
@@ -256,6 +259,17 @@ public class CommandParser {
        */
       public Builder fileName(String fileName) {
         this.fileName = fileName;
+        return this;
+      }
+
+      /**
+       * Sets the batch file path for batch execution commands.
+       *
+       * @param batchFile path to the batch file
+       * @return builder instance
+       */
+      public Builder batchFile(String batchFile) {
+        this.batchFile = batchFile;
         return this;
       }
 
@@ -423,6 +437,10 @@ public class CommandParser {
       return fileName;
     }
 
+    public String getBatchFile() {
+      return batchFile;
+    }
+
     public String getCalendarName() {
       return calendarName;
     }
@@ -483,6 +501,7 @@ public class CommandParser {
    * {@code edit calendar ...},
    * {@code use calendar ...},
    * {@code export cal ...},
+   * {@code batch <file>},
    * {@code show status on ...},
    * {@code print events on ...},
    * {@code print events from ...},
@@ -540,6 +559,15 @@ public class CommandParser {
   private Command parseSimpleCommands(String trimmed, String lower) {
     if (lower.equals("exit")) {
       return Command.builder("exit", CommandType.EXIT).build();
+    }
+    if (lower.startsWith("batch ")) {
+      String path = unquote(trimmed.substring("batch ".length()).trim());
+      if (path.isEmpty()) {
+        throw new IllegalArgumentException("Batch path is required");
+      }
+      return Command.builder("batch", CommandType.BATCH)
+          .batchFile(path)
+          .build();
     }
     if (lower.startsWith("export cal ")) {
       String fileName = trimmed.substring("export cal ".length()).trim();

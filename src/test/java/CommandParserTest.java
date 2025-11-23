@@ -66,6 +66,17 @@ public class CommandParserTest {
     assertEquals("res/calendar.csv", c.getFileName());
   }
 
+  /**
+   * Batch command should capture the batch file path.
+   */
+  @Test
+  public void testBatchCommand() {
+    Command c = parser.parse("batch scripts/demo.txt");
+    assertEquals("batch", c.getType());
+    assertEquals("scripts/demo.txt", c.getBatchFile());
+    assertEquals(calendar.controller.CommandType.BATCH, c.getTypeEnum());
+  }
+
 
   /**
    * Parses print range command.

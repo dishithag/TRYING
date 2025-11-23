@@ -790,6 +790,32 @@ public class AbstractCalendarControllerExecTest {
     assertTrue(buf.toString().contains("Copied 1 event(s) to target"));
   }
 
+  /**
+   * Executes a batch file that switches calendars and creates an event.
+   */
+  @Test
+  public void testBatchExecutionCreatesEvent() throws Exception {
+    CalendarBook book = new CalendarBookImpl();
+    Calendar calendar = book.createCalendar("default", ZoneId.of("America/New_York"));
+
+    ByteArrayOutputStream buf = new ByteArrayOutputStream();
+    CalendarView view = new TextCalendarView(new PrintStream(buf));
+    ExposedController controller = new ExposedController(book, view, new StringReader(""));
+
+    String batch = String.join(System.lineSeparator(),
+        "use calendar --name default",
+        "create event Batch from 2025-11-12T10:00 to 2025-11-12T11:00");
+    java.nio.file.Path temp = Files.createTempFile("batch", ".txt");
+    Files.write(temp, batch.getBytes());
+
+    CommandParser parser = new CommandParser();
+    controller.runCommand(parser.parse("batch " + temp.toString()));
+
+    List<Event> events = calendar.getEventsOnDate(LocalDate.of(2025, 11, 12));
+    assertEquals(1, events.size());
+    assertTrue(buf.toString().contains("Batch completed"));
+  }
+
 
 
 

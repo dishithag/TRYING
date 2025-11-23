@@ -18,5 +18,6 @@ public enum CommandType {
   EDIT,
   COPY_EVENT,
   COPY_ON_DATE,
-  COPY_BETWEEN
+  COPY_BETWEEN,
+  BATCH
 }

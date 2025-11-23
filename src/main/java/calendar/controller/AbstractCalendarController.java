@@ -10,6 +10,9 @@ import calendar.view.CalendarView;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -26,7 +29,8 @@ public abstract class AbstractCalendarController implements CalendarController {
   protected final CalendarContext context;
   protected final CalendarView view;
   protected final BufferedReader reader;
-  protected final CommandParser parser;
+  protected final CommandParsingStrategy parser;
+  private boolean shouldExit;
 
   /**
    * Constructs a controller wired to a {@link calendar.CalendarBook} model,
@@ -40,14 +44,28 @@ public abstract class AbstractCalendarController implements CalendarController {
    */
 
   protected AbstractCalendarController(CalendarBook book, CalendarView view, Reader input) {
-    if (book == null || view == null || input == null) {
+    this(book, view, input, new CommandParser());
+  }
+
+  /**
+   * Constructs a controller with an injected parser strategy.
+   *
+   * @param book   calendar-book model
+   * @param view   output view
+   * @param input  reader for incoming commands
+   * @param parser parser strategy to interpret commands
+   */
+  protected AbstractCalendarController(CalendarBook book, CalendarView view, Reader input,
+      CommandParsingStrategy parser) {
+    if (book == null || view == null || input == null || parser == null) {
       throw new IllegalArgumentException("Arguments cannot be null");
     }
     this.book = book;
     this.context = new CalendarContext(book);
     this.view = view;
     this.reader = new BufferedReader(input);
-    this.parser = new CommandParser();
+    this.parser = parser;
+    this.shouldExit = false;
   }
 
   @Override
@@ -69,12 +87,11 @@ public abstract class AbstractCalendarController implements CalendarController {
         }
         try {
           CommandParser.Command cmd = parser.parse(trimmed);
-          if (cmd.getTypeEnum() == CommandType.EXIT) {
-            handleExit();
+          executeCommand(cmd);
+          if (shouldExit) {
             foundExit = true;
             break;
           }
-          executeCommand(cmd);
         } catch (Exception e) {
           handleError(e.getMessage(), lineNumber);
         }
@@ -104,6 +121,12 @@ public abstract class AbstractCalendarController implements CalendarController {
   protected void executeCommand(CommandParser.Command cmd) {
     try {
       switch (cmd.getTypeEnum()) {
+        case EXIT:
+          {
+          shouldExit = true;
+          handleExit();
+          break;
+          }
         case CREATE_CALENDAR:
           {
           book.createCalendar(cmd.getCalendarName(), ZoneId.of(cmd.getTimezoneId()));
@@ -187,6 +210,11 @@ public abstract class AbstractCalendarController implements CalendarController {
         case COPY_BETWEEN:
           {
           handleCopyBetween(cmd);
+          break;
+          }
+        case BATCH:
+          {
+          handleBatch(cmd);
           break;
           }
         default:
@@ -390,6 +418,34 @@ public abstract class AbstractCalendarController implements CalendarController {
       }
     }
     return false;
+  }
+
+  private void handleBatch(CommandParser.Command cmd) throws IOException {
+    Path path = Paths.get(cmd.getBatchFile());
+    if (!Files.exists(path)) {
+      throw new IllegalArgumentException("Batch file not found: " + path);
+    }
+    int nestedLine = 0;
+    try (BufferedReader batchReader = Files.newBufferedReader(path)) {
+      String line;
+      while ((line = batchReader.readLine()) != null) {
+        nestedLine++;
+        String trimmed = line.trim();
+        if (trimmed.isEmpty()) {
+          continue;
+        }
+        try {
+          CommandParser.Command nested = parser.parse(trimmed);
+          executeCommand(nested);
+          if (shouldExit) {
+            return;
+          }
+        } catch (Exception e) {
+          view.displayError("Batch line " + nestedLine + ": " + e.getMessage());
+        }
+      }
+    }
+    view.displayMessage("Batch completed: " + path.toAbsolutePath());
   }
 
   /**
