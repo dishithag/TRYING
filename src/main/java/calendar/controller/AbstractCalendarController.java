@@ -13,6 +13,7 @@ import java.io.Reader;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.List;
 
@@ -316,12 +317,8 @@ public abstract class AbstractCalendarController implements CalendarController {
     int copied = 0;
     for (Event e : todays) {
       Duration dur = Duration.between(e.getStartDateTime(), e.getEndDateTime());
-      LocalDateTime localClockAtDst = e.getStartDateTime()
-          .atZone(src.getZoneId())
-          .withZoneSameInstant(dst.getZoneId())
-          .toLocalDateTime();
       LocalDateTime newStart = cmd.getTargetDateTime()
-          .toLocalDate().atTime(localClockAtDst.toLocalTime());
+          .toLocalDate().atTime(convertStartToTargetLocalTime(e, src, dst));
       LocalDateTime newEnd = newStart.plus(dur);
 
       if (existsExact(dst, e.getSubject(), newStart, newEnd)
@@ -354,13 +351,9 @@ public abstract class AbstractCalendarController implements CalendarController {
       LocalDate d = e.getStartDateTime().toLocalDate();
       long dayOffset = java.time.temporal.ChronoUnit.DAYS.between(startDay, d);
       Duration dur = Duration.between(e.getStartDateTime(), e.getEndDateTime());
-      LocalDateTime localClockAtDst = e.getStartDateTime()
-          .atZone(src.getZoneId())
-          .withZoneSameInstant(dst.getZoneId())
-          .toLocalDateTime();
 
       LocalDate targetDay = cmd.getTargetDateTime().toLocalDate().plusDays(dayOffset);
-      LocalDateTime newStart = targetDay.atTime(localClockAtDst.toLocalTime());
+      LocalDateTime newStart = targetDay.atTime(convertStartToTargetLocalTime(e, src, dst));
       LocalDateTime newEnd = newStart.plus(dur);
 
       if (existsExact(dst, e.getSubject(), newStart, newEnd)
@@ -373,6 +366,13 @@ public abstract class AbstractCalendarController implements CalendarController {
     }
 
     view.displayMessage("Copied " + copied + " event(s) to " + cmd.getTargetCalendar());
+  }
+
+  private LocalTime convertStartToTargetLocalTime(Event event, Calendar src, Calendar dst) {
+    return event.getStartDateTime()
+        .atZone(src.getZoneId())
+        .withZoneSameInstant(dst.getZoneId())
+        .toLocalTime();
   }
 
   private boolean existsExact(Calendar cal, String subject, LocalDateTime start,
