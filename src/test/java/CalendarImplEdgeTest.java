@@ -1089,4 +1089,29 @@ public class CalendarImplEdgeTest {
     List<LocalDateTime> newStarts = index.starts(newSeriesId);
     assertEquals(2, newStarts.size());
   }
+
+  /**
+   * Events should be stored in chronological order for predictable queries.
+   */
+  @Test
+  public void testEventsStoredInSortedOrder() {
+    CalendarImpl cal = new CalendarImpl();
+
+    LocalDateTime early = LocalDateTime.of(2025, 11, 5, 9, 0);
+    LocalDateTime mid = LocalDateTime.of(2025, 11, 5, 10, 0);
+    LocalDateTime late = LocalDateTime.of(2025, 11, 5, 11, 0);
+
+    cal.createEvent("Later", late, late.plusHours(1));
+    cal.createEvent("LongerAtTen", mid, mid.plusHours(2));
+    cal.createEvent("Early", early, early.plusHours(1));
+    cal.createEvent("ShortAtTen", mid, mid.plusMinutes(45));
+
+    List<Event> ordered = cal.getAllEvents();
+
+    assertEquals(4, ordered.size());
+    assertEquals("Early", ordered.get(0).getSubject());
+    assertEquals("ShortAtTen", ordered.get(1).getSubject());
+    assertEquals("LongerAtTen", ordered.get(2).getSubject());
+    assertEquals("Later", ordered.get(3).getSubject());
+  }
 }
