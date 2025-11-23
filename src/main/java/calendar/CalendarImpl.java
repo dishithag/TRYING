@@ -7,13 +7,12 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.NavigableSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -29,7 +28,7 @@ public class CalendarImpl implements Calendar {
           .thenComparing(Event::getEndDateTime)
           .thenComparing(Event::getSubject);
 
-  private final NavigableSet<Event> events;
+  private final List<Event> events;
   private final SeriesIndex seriesIndex;
 
   private String name;
@@ -54,8 +53,28 @@ public class CalendarImpl implements Calendar {
     }
     this.name = name;
     this.zoneId = zoneId;
-    this.events = new TreeSet<>(EVENT_ORDER);
+    this.events = new ArrayList<>();
     this.seriesIndex = new SeriesIndex();
+  }
+
+  private void addEvent(Event event) {
+    int idx = Collections.binarySearch(events, event, EVENT_ORDER);
+    if (idx < 0) {
+      idx = -idx - 1;
+    }
+    events.add(idx, event);
+  }
+
+  private int firstIndexOnOrAfter(LocalDateTime start) {
+    int idx = Collections.binarySearch(events, new SingleEvent("", start, start), EVENT_ORDER);
+    if (idx < 0) {
+      idx = -idx - 1;
+    } else {
+      while (idx > 0 && events.get(idx - 1).getStartDateTime().equals(start)) {
+        idx--;
+      }
+    }
+    return idx;
   }
 
   @Override
@@ -99,7 +118,7 @@ public class CalendarImpl implements Calendar {
         .startDateTime(start)
         .endDateTime(end)
         .build();
-    events.add(event);
+    addEvent(event);
     event.getSeriesId().ifPresent(id -> seriesIndex.add(id, event.getStartDateTime()));
     return event;
   }
@@ -146,11 +165,14 @@ public class CalendarImpl implements Calendar {
   @Override
   public List<Event> findEvents(String subject, LocalDateTime start, LocalDateTime end) {
     List<Event> matches = new ArrayList<>();
-    for (Event e : events.tailSet(boundaryEvent(start), true)) {
-      if (!e.getStartDateTime().equals(start)) {
+    int idx = firstIndexOnOrAfter(start);
+    for (int i = idx; i < events.size(); i++) {
+      Event e = events.get(i);
+      int cmp = e.getStartDateTime().compareTo(start);
+      if (cmp > 0) {
         break;
       }
-      if (e.getSubject().equals(subject)
+      if (cmp == 0 && e.getSubject().equals(subject)
           && (end == null || e.getEndDateTime().equals(end))) {
         matches.add(e);
       }
@@ -385,7 +407,7 @@ public class CalendarImpl implements Calendar {
   @Override
   public List<Event> getEventsInRange(LocalDateTime start, LocalDateTime end) {
     List<Event> result = new ArrayList<>();
-    for (Event e : events.tailSet(boundaryEvent(start), true)) {
+    for (Event e : events) {
       if (e.getStartDateTime().isAfter(end)) {
         break;
       }
@@ -398,17 +420,12 @@ public class CalendarImpl implements Calendar {
 
   @Override
   public boolean isBusyAt(LocalDateTime dateTime) {
-    for (Event e : events.headSet(boundaryEvent(dateTime), true)) {
+    for (Event e : events) {
+      if (e.getStartDateTime().isAfter(dateTime)) {
+        break;
+      }
       if (!dateTime.isBefore(e.getStartDateTime())
           && dateTime.isBefore(e.getEndDateTime())) {
-        return true;
-      }
-    }
-    for (Event e : events.tailSet(boundaryEvent(dateTime), true)) {
-      if (e.getStartDateTime().isAfter(dateTime)) {
-        return false;
-      }
-      if (dateTime.isBefore(e.getEndDateTime())) {
         return true;
       }
     }
@@ -446,7 +463,7 @@ public class CalendarImpl implements Calendar {
               .endDateTime(currentEnd)
               .seriesId(seriesId)
               .build();
-          events.add(event);
+          addEvent(event);
           created.add(event);
           count++;
           if (count >= maxOccurrences) {
@@ -486,7 +503,7 @@ public class CalendarImpl implements Calendar {
 
   private void replaceEvent(Event oldEvent, Event newEvent) {
     if (events.remove(oldEvent)) {
-      events.add(newEvent);
+      addEvent(newEvent);
 
       String oldSid = oldEvent.getSeriesId().orElse(null);
       String newSid = newEvent.getSeriesId().orElse(null);
@@ -544,12 +561,9 @@ public class CalendarImpl implements Calendar {
           .endDateTime(newEnd)
           .build());
     }
+    converted.sort(EVENT_ORDER);
     events.clear();
     events.addAll(converted);
-  }
-
-  private Event boundaryEvent(LocalDateTime start) {
-    return new SingleEvent("~BOUNDARY~", start, start);
   }
 
   @Override
@@ -561,7 +575,7 @@ public class CalendarImpl implements Calendar {
         .startDateTime(newStart)
         .endDateTime(newEnd)
         .build();
-    events.add(copied);
+    addEvent(copied);
     copied.getSeriesId().ifPresent(id -> seriesIndex.add(id, copied.getStartDateTime()));
     return copied;
   }
