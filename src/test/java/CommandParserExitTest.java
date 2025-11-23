@@ -17,7 +17,7 @@ public class CommandParserExitTest {
     CommandParser parser = new CommandParser();
     CommandParser.Command cmd = parser.parse("exit");
     assertNotNull(cmd);
-    assertEquals("exit", cmd.type);
+    assertEquals("exit", cmd.getType());
   }
 
   /**

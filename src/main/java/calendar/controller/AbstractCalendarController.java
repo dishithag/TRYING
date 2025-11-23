@@ -13,6 +13,7 @@ import java.io.Reader;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.List;
 
@@ -68,7 +69,7 @@ public abstract class AbstractCalendarController implements CalendarController {
         }
         try {
           CommandParser.Command cmd = parser.parse(trimmed);
-          if (cmd.typeEnum == CommandType.EXIT) {
+          if (cmd.getTypeEnum() == CommandType.EXIT) {
             handleExit();
             foundExit = true;
             break;
@@ -88,7 +89,7 @@ public abstract class AbstractCalendarController implements CalendarController {
 
   /**
    * Executes a parsed {@link CommandParser.Command} by dispatching on
-   * {@code cmd.typeEnum}. Depending on the type, this method creates or edits
+   * {@code cmd.getTypeEnum()}. Depending on the type, this method creates or edits
    * calendars/events, prints listings or status, exports data, or copies events,
    * delegating to helpers such as {@link #handleEdit(CommandParser.Command)},
    * {@link #handleEditCalendar(CommandParser.Command)},
@@ -102,12 +103,11 @@ public abstract class AbstractCalendarController implements CalendarController {
 
   protected void executeCommand(CommandParser.Command cmd) {
     try {
-      switch (cmd.typeEnum) {
+      switch (cmd.getTypeEnum()) {
         case CREATE_CALENDAR:
           {
-          book.createCalendar(cmd.calendarName, ZoneId.of(cmd.timezoneId));
-          context.use(cmd.calendarName);
-          view.displayMessage("Created and switched to calendar: " + cmd.calendarName);
+          book.createCalendar(cmd.getCalendarName(), ZoneId.of(cmd.getTimezoneId()));
+          view.displayMessage("Created calendar: " + cmd.getCalendarName());
           break;
           }
         case EDIT_CALENDAR:
@@ -117,14 +117,14 @@ public abstract class AbstractCalendarController implements CalendarController {
           }
         case USE_CALENDAR:
           {
-          context.use(cmd.calendarName);
-          view.displayMessage("Using calendar: " + cmd.calendarName);
+          context.use(cmd.getCalendarName());
+          view.displayMessage("Using calendar: " + cmd.getCalendarName());
           break;
           }
         case CREATE_SINGLE:
           {
           Calendar cal = context.current();
-          Event e = cal.createEvent(cmd.subject, cmd.startDateTime, cmd.endDateTime);
+          Event e = cal.createEvent(cmd.getSubject(), cmd.getStartDateTime(), cmd.getEndDateTime());
           view.displayMessage("Event created: " + e.getSubject());
           break;
           }
@@ -132,7 +132,8 @@ public abstract class AbstractCalendarController implements CalendarController {
           {
           Calendar cal = context.current();
           List<Event> series = cal.createEventSeries(
-              cmd.subject, cmd.startDateTime, cmd.endDateTime, cmd.weekdays, cmd.occurrences);
+              cmd.getSubject(), cmd.getStartDateTime(), cmd.getEndDateTime(),
+              cmd.getWeekdays(), cmd.getOccurrences());
           view.displayMessage("Created " + series.size() + " events in series");
           break;
           }
@@ -140,7 +141,8 @@ public abstract class AbstractCalendarController implements CalendarController {
           {
           Calendar cal = context.current();
           List<Event> seriesUntil = cal.createEventSeriesUntil(
-              cmd.subject, cmd.startDateTime, cmd.endDateTime, cmd.weekdays, cmd.untilDate);
+              cmd.getSubject(), cmd.getStartDateTime(),
+              cmd.getEndDateTime(), cmd.getWeekdays(), cmd.getUntilDate());
           view.displayMessage("Created " + seriesUntil.size() + " events in series");
           break;
           }
@@ -152,25 +154,25 @@ public abstract class AbstractCalendarController implements CalendarController {
         case PRINT_ON:
           {
           Calendar cal = context.current();
-          view.displayEvents(cal.getEventsOnDate(cmd.startDateTime.toLocalDate()));
+          view.displayEvents(cal.getEventsOnDate(cmd.getStartDateTime().toLocalDate()));
           break;
           }
         case PRINT_RANGE:
           {
           Calendar cal = context.current();
-          view.displayEvents(cal.getEventsInRange(cmd.startDateTime, cmd.endDateTime));
+          view.displayEvents(cal.getEventsInRange(cmd.getStartDateTime(), cmd.getEndDateTime()));
           break;
           }
         case STATUS:
           {
           Calendar cal = context.current();
-          view.displayStatus(cal.isBusyAt(cmd.startDateTime));
+          view.displayStatus(cal.isBusyAt(cmd.getStartDateTime()));
           break;
           }
         case EXPORT:
           {
           Calendar cal = context.current();
-          String path = ExportUtil.export(cal, cmd.fileName);
+          String path = ExportUtil.export(cal, cmd.getFileName());
           view.displayMessage("Exported to: " + path);
           break;
           }
@@ -190,7 +192,7 @@ public abstract class AbstractCalendarController implements CalendarController {
           break;
           }
         default:
-          view.displayError("Unknown command type: " + cmd.type);
+          view.displayError("Unknown command type: " + cmd.getType());
       }
     } catch (Exception e) {
       view.displayError(e.getMessage());
@@ -200,7 +202,7 @@ public abstract class AbstractCalendarController implements CalendarController {
   /**
    * Applies an edit command to the active calendar.
    * Resolves the target {@link EventProperty} and the edit scope
-   * (event / events-from-date / whole series), coerces {@code cmd.newValue}
+   * (event / events-from-date / whole series), coerces {@code cmd.getNewValue()}
    * to a {@link java.time.LocalDateTime} when editing START/END or to text
    * otherwise, and delegates to the corresponding Calendar edit method.
    * Required fields in {@code cmd}: {@code subject}, {@code startDateTime},
@@ -213,37 +215,37 @@ public abstract class AbstractCalendarController implements CalendarController {
 
   protected void handleEdit(CommandParser.Command cmd) {
     Calendar cal = context.current();
-    EventProperty prop = cmd.eventPropertyEnum != null
-        ? cmd.eventPropertyEnum
-        : EventProperty.fromToken(cmd.property);
+    EventProperty prop = cmd.getEventPropertyEnum() != null
+        ? cmd.getEventPropertyEnum()
+        : EventProperty.fromToken(cmd.getProperty());
 
     LocalDateTime dt = null;
     String text = null;
     if (prop == EventProperty.START || prop == EventProperty.END) {
-      dt = LocalDateTime.parse(cmd.newValue);
+      dt = LocalDateTime.parse(cmd.getNewValue());
     } else {
-      text = cmd.newValue;
+      text = cmd.getNewValue();
     }
 
-    EditScope scope = cmd.editScopeEnum != null
-        ? cmd.editScopeEnum
-        : EditScope.fromToken(cmd.editScope);
+    EditScope scope = cmd.getEditScopeEnum() != null
+        ? cmd.getEditScopeEnum()
+        : EditScope.fromToken(cmd.getEditScope());
 
     switch (scope) {
       case EVENT:
-        cal.editEvent(cmd.subject, cmd.startDateTime, prop, dt, text);
+        cal.editEvent(cmd.getSubject(), cmd.getStartDateTime(), prop, dt, text);
         view.displayMessage("Event edited");
         break;
       case EVENTS:
-        cal.editEventsFromDate(cmd.subject, cmd.startDateTime, prop, dt, text);
+        cal.editEventsFromDate(cmd.getSubject(), cmd.getStartDateTime(), prop, dt, text);
         view.displayMessage("Events edited");
         break;
       case SERIES:
-        cal.editSeries(cmd.subject, cmd.startDateTime, prop, dt, text);
+        cal.editSeries(cmd.getSubject(), cmd.getStartDateTime(), prop, dt, text);
         view.displayMessage("Series edited");
         break;
       default:
-        view.displayError("Unknown edit scope: " + cmd.editScope);
+        view.displayError("Unknown edit scope: " + cmd.getEditScope());
     }
   }
 
@@ -252,10 +254,10 @@ public abstract class AbstractCalendarController implements CalendarController {
    *
    * <p>Supported properties:
    * <ul>
-   *   <li>{@link CalendarProperty#NAME} — renames {@code cmd.calendarName}
-   *   to {@code cmd.newValue}.</li>
+   *   <li>{@link CalendarProperty#NAME} — renames {@code cmd.getCalendarName()}
+   *   to {@code cmd.getNewValue()}.</li>
    *   <li>{@link CalendarProperty#TIMEZONE} — updates the calendar
-   *   timezone to {@code ZoneId.of(cmd.newValue)}.</li>
+   *   timezone to {@code ZoneId.of(cmd.getNewValue())}.</li>
    * </ul>
    * On success, a confirmation is printed via the {@link calendar.view.CalendarView}.
    * If the property is not supported, an error message is shown.
@@ -269,15 +271,15 @@ public abstract class AbstractCalendarController implements CalendarController {
    */
 
   protected void handleEditCalendar(CommandParser.Command cmd) {
-    CalendarProperty cp = cmd.calendarPropertyEnum;
+    CalendarProperty cp = cmd.getCalendarPropertyEnum();
     if (cp == CalendarProperty.NAME) {
-      book.renameCalendar(cmd.calendarName, cmd.newValue);
-      view.displayMessage("Calendar renamed to: " + cmd.newValue);
+      book.renameCalendar(cmd.getCalendarName(), cmd.getNewValue());
+      view.displayMessage("Calendar renamed to: " + cmd.getNewValue());
     } else if (cp == CalendarProperty.TIMEZONE) {
-      book.changeTimezone(cmd.calendarName, ZoneId.of(cmd.newValue));
-      view.displayMessage("Timezone updated for: " + cmd.calendarName);
+      book.changeTimezone(cmd.getCalendarName(), ZoneId.of(cmd.getNewValue()));
+      view.displayMessage("Timezone updated for: " + cmd.getCalendarName());
     } else {
-      view.displayError("Unknown calendar property: " + cmd.property);
+      view.displayError("Unknown calendar property: " + cmd.getProperty());
     }
   }
 
@@ -286,23 +288,23 @@ public abstract class AbstractCalendarController implements CalendarController {
    */
   protected void handleCopySingle(CommandParser.Command cmd) {
     Calendar src = context.current();
-    Calendar dst = book.getCalendar(cmd.targetCalendar);
-    List<Event> matches = src.findEvents(cmd.subject, cmd.startDateTime);
+    Calendar dst = book.getCalendar(cmd.getTargetCalendar());
+    List<Event> matches = src.findEvents(cmd.getSubject(), cmd.getStartDateTime());
     if (matches.size() != 1) {
       throw new IllegalArgumentException("Event not found or not unique");
     }
     Event e = matches.get(0);
     Duration dur = Duration.between(e.getStartDateTime(), e.getEndDateTime());
-    LocalDateTime newStart = cmd.targetDateTime;
+    LocalDateTime newStart = cmd.getTargetDateTime();
     LocalDateTime newEnd = newStart.plus(dur);
 
     if (existsExact(dst, e.getSubject(), newStart, newEnd)) {
-      view.displayMessage("Copied 0 event(s) to " + cmd.targetCalendar);
+      view.displayMessage("Copied 0 event(s) to " + cmd.getTargetCalendar());
       return;
     }
 
     dst.copyFrom(e, newStart, newEnd);
-    view.displayMessage("Copied 1 event to " + cmd.targetCalendar);
+    view.displayMessage("Copied 1 event to " + cmd.getTargetCalendar());
   }
 
   /**
@@ -310,18 +312,14 @@ public abstract class AbstractCalendarController implements CalendarController {
    */
   protected void handleCopyOnDate(CommandParser.Command cmd) {
     Calendar src = context.current();
-    Calendar dst = book.getCalendar(cmd.targetCalendar);
-    LocalDate srcDay = cmd.day;
+    Calendar dst = book.getCalendar(cmd.getTargetCalendar());
+    LocalDate srcDay = cmd.getDay();
     List<Event> todays = src.getEventsOnDate(srcDay);
     int copied = 0;
     for (Event e : todays) {
       Duration dur = Duration.between(e.getStartDateTime(), e.getEndDateTime());
-      LocalDateTime localClockAtDst = e.getStartDateTime()
-          .atZone(src.getZoneId())
-          .withZoneSameInstant(dst.getZoneId())
-          .toLocalDateTime();
-      LocalDateTime newStart = cmd.targetDateTime
-          .toLocalDate().atTime(localClockAtDst.toLocalTime());
+      LocalDateTime newStart = cmd.getTargetDateTime()
+          .toLocalDate().atTime(convertStartToTargetLocalTime(e, src, dst));
       LocalDateTime newEnd = newStart.plus(dur);
 
       if (existsExact(dst, e.getSubject(), newStart, newEnd)
@@ -332,7 +330,7 @@ public abstract class AbstractCalendarController implements CalendarController {
       dst.copyFrom(e, newStart, newEnd);
       copied++;
     }
-    view.displayMessage("Copied " + copied + " event(s) to " + cmd.targetCalendar);
+    view.displayMessage("Copied " + copied + " event(s) to " + cmd.getTargetCalendar());
   }
 
   /**
@@ -340,10 +338,10 @@ public abstract class AbstractCalendarController implements CalendarController {
    */
   protected void handleCopyBetween(CommandParser.Command cmd) {
     Calendar src = context.current();
-    Calendar dst = book.getCalendar(cmd.targetCalendar);
+    Calendar dst = book.getCalendar(cmd.getTargetCalendar());
 
-    LocalDate startDay = cmd.rangeStart;
-    LocalDate endDay = cmd.rangeEnd;
+    LocalDate startDay = cmd.getRangeStart();
+    LocalDate endDay = cmd.getRangeEnd();
     LocalDateTime srcStart = startDay.atStartOfDay();
     LocalDateTime srcEnd = endDay.plusDays(1).atStartOfDay();
 
@@ -354,13 +352,9 @@ public abstract class AbstractCalendarController implements CalendarController {
       LocalDate d = e.getStartDateTime().toLocalDate();
       long dayOffset = java.time.temporal.ChronoUnit.DAYS.between(startDay, d);
       Duration dur = Duration.between(e.getStartDateTime(), e.getEndDateTime());
-      LocalDateTime localClockAtDst = e.getStartDateTime()
-          .atZone(src.getZoneId())
-          .withZoneSameInstant(dst.getZoneId())
-          .toLocalDateTime();
 
-      LocalDate targetDay = cmd.targetDateTime.toLocalDate().plusDays(dayOffset);
-      LocalDateTime newStart = targetDay.atTime(localClockAtDst.toLocalTime());
+      LocalDate targetDay = cmd.getTargetDateTime().toLocalDate().plusDays(dayOffset);
+      LocalDateTime newStart = targetDay.atTime(convertStartToTargetLocalTime(e, src, dst));
       LocalDateTime newEnd = newStart.plus(dur);
 
       if (existsExact(dst, e.getSubject(), newStart, newEnd)
@@ -372,7 +366,14 @@ public abstract class AbstractCalendarController implements CalendarController {
       copied++;
     }
 
-    view.displayMessage("Copied " + copied + " event(s) to " + cmd.targetCalendar);
+    view.displayMessage("Copied " + copied + " event(s) to " + cmd.getTargetCalendar());
+  }
+
+  private LocalTime convertStartToTargetLocalTime(Event event, Calendar src, Calendar dst) {
+    return event.getStartDateTime()
+        .atZone(src.getZoneId())
+        .withZoneSameInstant(dst.getZoneId())
+        .toLocalTime();
   }
 
   private boolean existsExact(Calendar cal, String subject, LocalDateTime start,

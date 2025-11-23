@@ -21,3 +21,11 @@ java -jar build/libs/calendar-1.0.jar --mode headless res/commands.txt
 Notes:
 - Run from project root (same folder as `gradlew`).
 - Scripts must have no blank lines. Format is auto-detected by extension (.csv / .ical).
+
+## Checking recent changes
+If you need to inspect the latest commit from the repository terminal (including IntelliJ's built-in terminal), run:
+
+- `git log --oneline -n 3` to see the most recent commits and their hashes.
+- `git show <commit-hash>` to view the diff for a specific commit from the list above.
+
+This is useful if a shared hash looks missing—`git log` will show the correct hash present in your local clone.
